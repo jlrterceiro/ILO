@@ -152,6 +152,7 @@ void fazer_mudanca(int indice, PosicaoDepartamento novo_pos) {
             valor_func-=area_inter[i][indice];
         }
     }
+     double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
 
     double centro_x1, centro_y1, centro_x2, centro_y2;
     gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
