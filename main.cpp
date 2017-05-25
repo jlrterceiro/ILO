@@ -9,7 +9,10 @@
 #define EPS 0.01
 
 using namespace std;
-
+//pegar area de intersecao entre dois depts
+//usando coordenadas dos cantos de cada um
+//sendo x1e - o valor de x da esquerda do dept 1
+//	x2d - o valor de x da direita do dept 2...
 double get_area_inter(double x1e, double y1e, double x1d, double y1d,
                   double x2e, double y2e, double x2d, double y2d);
 struct Retangulo {
@@ -22,7 +25,10 @@ struct Retangulo {
 
     }
 };
-
+//ponto do centro do departamento
+//e seu tipo de forma
+//se flag_forma = 1 - normal (original)
+//se flag_forma = 2 - alterada (para horizontal ou vertical)
 struct PosicaoDepartamento {
     double x, y;
     int flag_forma;
@@ -41,11 +47,11 @@ double dist_dep[MAX_DEP][MAX_DEP]; //
 double area_inter[MAX_DEP][MAX_DEP];
 double valor_func;
 double peso_inter=1;
-
+//distancia entre dois depts
 double calcula_distancia(double x1, double x2, double y1, double y2) {
     return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 }
-
+//gerar "cantos" aleatórios
 void gerarCantos(double x, double y, int flag_forma, double comprimento, double largura,
                  double &xe, double &ye, double &xd, double &yd) {
     xe = x;
@@ -59,7 +65,7 @@ void gerarCantos(double x, double y, int flag_forma, double comprimento, double 
         yd = y - comprimento;
     }
 }
-
+//coordenadas do centro
 void gerarCentro(double x, double y, int flag_forma, double comprimento, double largura,
                  double &centro_x, double &centro_y) {
     if (flag_forma == 0) {
@@ -104,6 +110,7 @@ void gerar_valor_func() {
             }
         }
     }
+//funcao objetivo = SUM((Flux(i,j) * Dist(i,j) + Peso_inter * Area_Inter(i,j));
     valor_func=0;
     for(i = 0; i < quant_dep; i++){
         for(j = 0; j < quant_dep; j++){
@@ -112,7 +119,7 @@ void gerar_valor_func() {
     }
     printf("Valor func: %lf", valor_func);
 }
-
+//
 double get_valor_mudanca(int indice, PosicaoDepartamento novo_pos) {
     double retorno=valor_func;
     int i;
