@@ -7,6 +7,7 @@
 
 #define MAX_DEP 40
 #define EPS 0.01
+#define INF 1000000000.0
 
 using namespace std;
 //pegar area de intersecao entre dois depts
@@ -16,9 +17,9 @@ using namespace std;
 double get_area_inter(double x1e, double y1e, double x1d, double y1d,
                   double x2e, double y2e, double x2d, double y2d);
 struct Retangulo {
-    double x1e, y1e, x1d, y1d;
-    Retangulo(double _x1e=0, double _y1e=0, double _x1d=0, double _y1d=0) {
-        x1e=_x1e; y1e=_y1e; x1d=_x1d; y1d=_y1d;
+    double xe, ye, xd, yd;
+    Retangulo(double _xe=0, double _ye=0, double _xd=0, double _yd=0) {
+        xe=_xe; ye=_ye; xd=_xd; yd=_yd;
     }
 
     ~Retangulo() {
@@ -32,6 +33,9 @@ struct Retangulo {
 struct PosicaoDepartamento {
     double x, y;
     int flag_forma;
+    PosicaoDepartamento(double _x=0, double _y=0, int _flag_forma=0) {
+        x=_x; y=_y; flag_forma=_flag_forma;
+    }
 };
 
 //Dados de entrada
@@ -46,9 +50,14 @@ PosicaoDepartamento pos_dep[MAX_DEP];
 double dist_dep[MAX_DEP][MAX_DEP]; //
 double area_inter[MAX_DEP][MAX_DEP];
 double valor_func;
-double peso_inter=1;
+double peso_inter=100;
+
+
+int max_iteracoes=500;
+
+
 //distancia entre dois depts
-double calcula_distancia(double x1, double x2, double y1, double y2) {
+double calcula_distancia(double x1, double y1, double x2, double y2) {
     return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 }
 //gerar "cantos" aleatórios
@@ -87,7 +96,7 @@ void gerar_valor_func() {
 
     for(i = 0; i < quant_dep; i++){
         for(j = 0; j < quant_dep; j++){
-            dist_dep[i][j] = calcula_distancia(x[i], x[j], y[i], y[j]);
+            dist_dep[i][j] = calcula_distancia(x[i], y[i], x[j], y[j]);
         }
     }
 //    for(i = 0; i < quant_dep; i++){
@@ -114,92 +123,45 @@ void gerar_valor_func() {
     valor_func=0;
     for(i = 0; i < quant_dep; i++){
         for(j = 0; j < quant_dep; j++){
+        printf("%lf ", fluxo[i][j]);
             valor_func += fluxo[i][j] * dist_dep[i][j] + peso_inter * area_inter[i][j];
         }
+        printf("\n");
     }
-    printf("Valor func: %lf", valor_func);
+   // printf("Valor func: %lf", valor_func);
 }
 //
-double get_valor_mudanca(int indice, PosicaoDepartamento novo_pos) {
-    double retorno=valor_func;
-    int i;
-    for (i=0; i<quant_dep; i++) {
-        if (i!=indice) {
-            retorno-=dist_dep[i][indice];
-            retorno-=area_inter[i][indice];
-        }
-    }
-    double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
-    double centro_x1, centro_y1, centro_x2, centro_y2;
-    gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
-    gerarCantos(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
-    for (i=0; i<quant_dep; i++) {
-        if (i!=indice) {
-            gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x2, centro_y2);
-            retorno+=calcula_distancia(centro_x1, centro_y1, centro_x2, centro_y2);
-            gerarCantos(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], x2e, y2e, x2d, y2d);
-            retorno+=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d) * peso_inter;
-        }
-    }
-    return retorno;
-}
 
-void fazer_mudanca(int indice, PosicaoDepartamento novo_pos) {
-    int i;
-    for (i=0; i<quant_dep; i++) {
-        if (i!=indice) {
-            valor_func-=dist_dep[i][indice];
-            valor_func-=area_inter[i][indice];
-        }
+int iguais_com_erro_precisao(double a, double b) {
+    double dif=a-b;
+    if (dif>-EPS && dif<EPS) {
+        return 1;
     }
-     double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
-
-    double centro_x1, centro_y1, centro_x2, centro_y2;
-    gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
-    gerarCantos(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
-    pos_dep[indice] = novo_pos;//troquei
-    for (i=0; i<quant_dep; i++) {
-            if(i != indice){
-                gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x2, centro_y2);
-                dist_dep[i][indice]=calcula_distancia(centro_x1, centro_y1, centro_x2, centro_y2);
-                dist_dep[indice][i] = dist_dep[i][indice];
-                valor_func+=dist_dep[i][indice];
-                gerarCantos(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], x2e, y2e, x2d, y2d);
-            }
-//            retorno+=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d) * peso_inter;
+    else {
+        return 0;
     }
-
-    valor_func+=get_valor_mudanca(indice, novo_pos);
-
 }
 
 void gerarSolucaoInicial() {
     int i;
-    double x1_aux, y1_aux;
+    double x_aux, y_aux;
     for (i=0; i<quant_dep; i++) {
-
-        x1_aux = lugs_permitidos[i][0].x1d-comp_dep[i];
-        y1_aux = lugs_permitidos[i][0].y1d+larg_dep[i];
+        x_aux = lugs_permitidos[i][0].xd-comp_dep[i];
+        y_aux = lugs_permitidos[i][0].yd+larg_dep[i];
         double dif_x, dif_y;
-        dif_x=x1_aux-lugs_permitidos[i][0].x1e;
-        dif_y=lugs_permitidos[i][0].y1e-y1_aux;
-        printf("mmmmmmmmm %d\n", i);
-        printf("%lf %lf %lf %lf\n", x1_aux, y1_aux, dif_x, dif_y);
+        dif_x=x_aux-lugs_permitidos[i][0].xe;
+        dif_y=lugs_permitidos[i][0].ye-y_aux;
         if (dif_x>-EPS && dif_x<EPS && dif_y>-EPS && dif_y<EPS) {
-             printf("olah\n");
-            pos_dep[i].x=lugs_permitidos[i][0].x1e;
-            pos_dep[i].y=lugs_permitidos[i][0].y1e;
+            pos_dep[i].x=lugs_permitidos[i][0].xe;
+            pos_dep[i].y=lugs_permitidos[i][0].ye;
             pos_dep[i].flag_forma=0;
         }
         else {
-                 printf("eita\n");
             double sort_x, sort_y;
-             printf("eita\n");
             sort_x=(rand()%((int) (dif_x*100)))/100.0;
             sort_y=(rand()%((int) (dif_y*100)))/100.0;
-            printf("eita\n");
-            pos_dep[i].x=lugs_permitidos[i][0].x1e+sort_x;
-            pos_dep[i].y=lugs_permitidos[i][0].y1e-sort_y;
+            pos_dep[i].x=lugs_permitidos[i][0].xe+sort_x;
+            pos_dep[i].y=lugs_permitidos[i][0].ye-sort_y;
             pos_dep[i].flag_forma=0;
         }
 
@@ -225,14 +187,14 @@ void entrada_de_dados() {
     for(i = 0; i < quant_dep; i++){
         for(j = 0; j <= i; j++ ){
             scanf("%lf", &fluxo[i][j]);
+            fluxo[j][i]=fluxo[i][j];
         }
     }
     for (i=0; i<quant_dep; i++) {
         scanf("%d", &j);
-        printf("++++ %d %d\n", i, j);
         for (k=0; k<j; k++) {
             Retangulo ret;
-            scanf("%lf %lf %lf %lf", &ret.x1e, &ret.y1e, &ret.x1d, &ret.y1d);
+            scanf("%lf %lf %lf %lf", &ret.xe, &ret.ye, &ret.xd, &ret.yd);
             lugs_permitidos[i].push_back(ret);
         }
         //for (k=0; k<lugs_permitidos.size(); k++) {
@@ -259,9 +221,8 @@ void saida(){
          printf("\n");
     }
     for (i=0; i<quant_dep; i++) {
-        printf("** %d %d\n", i, quant_dep);
         Retangulo ret=lugs_permitidos[i][0];
-        printf("%lf %lf %lf %lf\n", ret.x1e, ret.y1e, ret.x1d, ret.y1d);
+        printf("%lf %lf %lf %lf\n", ret.xe, ret.ye, ret.xd, ret.yd);
     }
 }
 
@@ -312,18 +273,215 @@ double get_area_inter(double x1e, double y1e, double x1d, double y1d,
 }
 
 
-int main(int argc, char * * argv) {
+
+// funcao pra saber se o primeiro retangulo esta dentro do segundo retangulo
+int dentro_do_retangulo(double x1e, double y1e, double x1d, double y1d,
+                        double x2e, double y2e, double x2d, double y2d) {
+    if ((x1e>=x2e || iguais_com_erro_precisao(x1e, x2e)) &&
+        (y1e<=y2e || iguais_com_erro_precisao(y1e, y2e)) &&
+        (x1d<=x2d || iguais_com_erro_precisao(x1d, x2d)) &&
+        (y1d>=y2d || iguais_com_erro_precisao(y1d, y2d)) ) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+double get_valor_mudanca(int indice, PosicaoDepartamento novo_pos) {
+    double retorno=valor_func;
+    int i;
+    for (i=0; i<quant_dep; i++) {
+        if (i!=indice) {
+            retorno-=dist_dep[i][indice];
+            retorno-=peso_inter*area_inter[i][indice];
+        }
+    }
+    double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
+    double centro_x1, centro_y1, centro_x2, centro_y2;
+    gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
+    gerarCantos(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
+    for (i=0; i<quant_dep; i++) {
+        if (i!=indice) {
+            gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x2, centro_y2);
+            retorno+=calcula_distancia(centro_x1, centro_y1, centro_x2, centro_y2);
+            gerarCantos(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], x2e, y2e, x2d, y2d);
+            retorno+=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d) * peso_inter;
+        }
+    }
+    return retorno;
+}
+
+void fazer_mudanca(int indice, PosicaoDepartamento novo_pos) {
+    int i;
+    for (i=0; i<quant_dep; i++) {
+        if (i!=indice) {
+            valor_func-=dist_dep[i][indice];
+            valor_func-= peso_inter*area_inter[i][indice];
+        }
+    }
+     double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
+
+    double centro_x1, centro_y1, centro_x2, centro_y2;
+    gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
+    gerarCantos(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
+    pos_dep[indice] = novo_pos;//troquei
+    for (i=0; i<quant_dep; i++) {
+            if(i != indice){
+                gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x2, centro_y2);
+                dist_dep[i][indice]=calcula_distancia(centro_x1, centro_y1, centro_x2, centro_y2);
+                dist_dep[indice][i] = dist_dep[i][indice];
+                valor_func+=dist_dep[i][indice];
+                gerarCantos(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], x2e, y2e, x2d, y2d);
+                area_inter[i][indice]=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d);
+                area_inter[indice][i]=area_inter[indice][i];
+                valor_func+=area_inter[i][indice]*peso_inter;
+            }
+//            retorno+=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d) * peso_inter;
+    }
+
+}
+
+
+void avaliar_mudanca(int indice, PosicaoDepartamento novo_pos, double &melhor_valor, int &dep_esc, PosicaoDepartamento &pos_esc) {
+    double valor_mov=get_valor_mudanca(indice, novo_pos);
+    //printf("++++ %lf\n", valor_mov);
+    if (valor_mov<melhor_valor) {
+        melhor_valor=valor_mov;
+        dep_esc=indice;
+        pos_esc=novo_pos;
+    }
+}
+
+void buscaTabu() {
+    gerarSolucaoInicial();
+    gerar_valor_func();
+    imprimirSolucao();
+    int iter_atual, i, j, k;
+    PosicaoDepartamento novo_pos;
+    double melhor_valor;
+    int dep_esc;
+    PosicaoDepartamento pos_esc;
+    double valor_mov;
+    double novo_xe, novo_ye, novo_xd, novo_yd;
+    double xe_perm[quant_dep], ye_perm[quant_dep], xd_perm[quant_dep], yd_perm[quant_dep];
+
+    for (i=0; i<quant_dep; i++) {
+        xe_perm[i]=lugs_permitidos[i][0].xe;
+        ye_perm[i]=lugs_permitidos[i][0].ye;
+        xd_perm[i]=lugs_permitidos[i][0].xd;
+        yd_perm[i]=lugs_permitidos[i][0].yd;
+    }
+    int quant;
+    for (iter_atual=1; iter_atual<=max_iteracoes; iter_atual++) {
+        printf("Iteração %d: %lf\n", iter_atual, valor_func);
+        melhor_valor=INF;
+        quant=0;
+        for (i=0; i<quant_dep; i++) {
+            // mover para a direita
+            for (j=1; j<=comp_fab; j++) {
+                for (k=0; k<=1; k++) {
+                    novo_pos=PosicaoDepartamento(pos_dep[i].x+j, pos_dep[i].y, k);
+                    gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[i], larg_dep[i],
+                                novo_xe, novo_ye, novo_xd, novo_yd);
+                    //printf("ei\n");
+                    //if (i==7) {
+                //        printf("xx %lf %lf %lf %lf %lf %lf %lf %lf\n", novo_xe, novo_ye, novo_xd, novo_yd,
+                  //      xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i]);
+                    //}
+                    if (dentro_do_retangulo(novo_xe, novo_ye, novo_xd, novo_yd,
+                        xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i])) {
+                        avaliar_mudanca(i, novo_pos, melhor_valor, dep_esc, pos_esc);
+                        quant++;
+                    }
+                }
+            }
+
+            // mover para a esquerda
+            for (j=1; j<=comp_fab; j++) {
+                for (k=0; k<=1; k++) {
+                    novo_pos=PosicaoDepartamento(pos_dep[i].x-j, pos_dep[i].y, k);
+                    gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[i], larg_dep[i],
+                                novo_xe, novo_ye, novo_xd, novo_yd);
+                    if (dentro_do_retangulo(novo_xe, novo_ye, novo_xd, novo_yd,
+                        xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i])) {
+                        avaliar_mudanca(i, novo_pos, melhor_valor, dep_esc, pos_esc);
+                        quant++;
+                    }
+                }
+            }
+
+            // mover para cima
+            for (j=1; j<=larg_fab; j++) {
+                for (k=0; k<=1; k++) {
+                    novo_pos=PosicaoDepartamento(pos_dep[i].x, pos_dep[i].y+j, k);
+                    gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[i], larg_dep[i],
+                                novo_xe, novo_ye, novo_xd, novo_yd);
+                    if (dentro_do_retangulo(novo_xe, novo_ye, novo_xd, novo_yd,
+                        xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i])) {
+                        avaliar_mudanca(i, novo_pos, melhor_valor, dep_esc, pos_esc);
+                        quant++;
+                    }
+                }
+            }
+
+            // mover para baixo
+            for (j=1; j<=larg_fab; j++) {
+                for (k=0; k<=1; k++) {
+                    novo_pos=PosicaoDepartamento(pos_dep[i].x, pos_dep[i].y-j, k);
+                    gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[i], larg_dep[i],
+                                novo_xe, novo_ye, novo_xd, novo_yd);
+                    if (dentro_do_retangulo(novo_xe, novo_ye, novo_xd, novo_yd,
+                        xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i])) {
+                        avaliar_mudanca(i, novo_pos, melhor_valor, dep_esc, pos_esc);
+                        quant++;
+                    }
+                }
+            }
+
+            // mudar apenas o flag_forma
+            novo_pos=PosicaoDepartamento(pos_dep[i].x, pos_dep[i].y-j, (pos_dep[i].flag_forma+1)%2);
+            gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[i], larg_dep[i],
+                        novo_xe, novo_ye, novo_xd, novo_yd);
+            if (dentro_do_retangulo(novo_xe, novo_ye, novo_xd, novo_yd,
+                xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i])) {
+                avaliar_mudanca(i, novo_pos, melhor_valor, dep_esc, pos_esc);
+                quant++;
+            }
+        }
+
+
+        if (melhor_valor<INF && melhor_valor<valor_func) {
+            printf("*** %lf\n", melhor_valor);
+            fazer_mudanca(dep_esc, pos_esc);
+            printf("---- %d\n", quant);
+            imprimirSolucao();
+        }
+        else {
+            break;
+        }
+
+    }
+    printf("Resultado final: %lf\n", valor_func);
+    printf("---- %d\n", quant);
+    freopen("solucao.txt", "w", stdout);
+    imprimirSolucao();
+
+}
+
+
+int main(int argc, char ** argv) {
     //printf("+++ %lf\n", area_inter(3, 7, 10, 4, -1, 5, 6, 1));
     //printf("+++ %lf\n", area_inter(1, 10, 15, 3, 5, 5, 9, 1));
     //printf("+++ %lf\n", area_inter(1, 10, 15, 3, 5, 30, 9, 20));
     srand(time(NULL));
     entrada_de_dados();
-    printf("oi\n");
-    saida();
-    gerarSolucaoInicial();
-    printf("oi\n");
-    imprimirSolucao();
-    gerar_valor_func();
+    //saida();
+   // gerarSolucaoInicial();
+    //imprimirSolucao();
+    buscaTabu();
+    //imprimirSolucao();
+    //gerar_valor_func();
 
     //gerarPosicoes();
     return 0;
