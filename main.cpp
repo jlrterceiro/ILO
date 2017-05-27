@@ -50,7 +50,7 @@ PosicaoDepartamento pos_dep[MAX_DEP];
 double dist_dep[MAX_DEP][MAX_DEP]; //
 double area_inter[MAX_DEP][MAX_DEP];
 double valor_func;
-double peso_inter=100;
+double peso_inter=7*quant_dep;
 
 
 int max_iteracoes=500;
@@ -169,9 +169,12 @@ void gerarSolucaoInicial() {
 
 
 void imprimirSolucao() {
+    double cx, cy;//centroY centroY
     int i;
     for (i=0; i<quant_dep; i++) {
-        printf("%d: %lf %lf %lf %lf %d\n", i, pos_dep[i].x, pos_dep[i].y, pos_dep[i].x+comp_dep[i], pos_dep[i].y-larg_dep[i], pos_dep[i].flag_forma);
+        //printf("%d: %lf %lf %lf %lf %d\n", i, pos_dep[i].x, pos_dep[i].y, pos_dep[i].x+comp_dep[i], pos_dep[i].y-larg_dep[i], pos_dep[i].flag_forma);
+        gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i],cx, cy);
+        printf("\n\n %lf %lf", cx, cy);
     }
 }
 
@@ -372,7 +375,7 @@ void buscaTabu() {
     }
     int quant;
     for (iter_atual=1; iter_atual<=max_iteracoes; iter_atual++) {
-        printf("Iteração %d: %lf\n", iter_atual, valor_func);
+        printf("\n\nIteracao %d: %lf\n", iter_atual, valor_func);
         melhor_valor=INF;
         quant=0;
         for (i=0; i<quant_dep; i++) {
@@ -460,10 +463,12 @@ void buscaTabu() {
         }
 
     }
-    printf("Resultado final: %lf\n", valor_func);
+    printf("\n\nResultado final: %lf\n", valor_func);
     printf("---- %d\n", quant);
     freopen("solucao.txt", "w", stdout);
     imprimirSolucao();
+    printf("\n\n");
+
 
 }
 
