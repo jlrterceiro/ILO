@@ -164,10 +164,8 @@ void gerarSolucaoInicial() {
             pos_dep[i].y=lugs_permitidos[i][0].ye-sort_y;
             pos_dep[i].flag_forma=0;
         }
-
     }
 }
-
 
 
 void imprimirSolucao() {
