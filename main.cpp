@@ -50,7 +50,7 @@ PosicaoDepartamento pos_dep[MAX_DEP];
 double dist_dep[MAX_DEP][MAX_DEP]; //
 double area_inter[MAX_DEP][MAX_DEP];
 double valor_func;
-double peso_inter=7*quant_dep;
+double peso_inter=1000;
 
 
 int max_iteracoes=500;
@@ -172,9 +172,35 @@ void imprimirSolucao() {
     double cx, cy;//centroY centroY
     int i;
     for (i=0; i<quant_dep; i++) {
-        //printf("%d: %lf %lf %lf %lf %d\n", i, pos_dep[i].x, pos_dep[i].y, pos_dep[i].x+comp_dep[i], pos_dep[i].y-larg_dep[i], pos_dep[i].flag_forma);
-        gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i],cx, cy);
-        printf("\n\n %lf %lf", cx, cy);
+        printf("%d: %lf %lf %lf %lf %d\n", i, pos_dep[i].x, pos_dep[i].y, pos_dep[i].x+comp_dep[i], pos_dep[i].y-larg_dep[i], pos_dep[i].flag_forma);
+        //gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i],cx, cy);
+        //printf("\n\n %lf %lf", cx, cy);
+    }
+}
+
+void imprimirSolucaoTerceiro() {
+    double xe, ye, xd, yd;//centroY centroY
+    int i;
+    printf("%d\n", quant_dep);
+    for (i=0; i<quant_dep; i++) {
+        double centro_x, centro_y;
+        gerarCantos(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], xe, ye, xd, yd);
+        printf("%lf %lf %lf %lf\n", xe, ye, xd, yd);
+        //gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i],cx, cy);
+        //printf("\n\n %lf %lf", cx, cy);
+    }
+
+}
+
+void imprimirSolucaoCentros() {
+    double cx, cy;//centroY centroY
+    int i;
+    for (i=0; i<quant_dep; i++) {
+        double centro_x, centro_y;
+        gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x, centro_y);
+        printf("%d: %lf %lf %d\n", i, centro_x, centro_y, pos_dep[i].flag_forma);
+        //gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i],cx, cy);
+        //printf("\n\n %lf %lf", cx, cy);
     }
 }
 
@@ -300,8 +326,8 @@ double get_valor_mudanca(int indice, PosicaoDepartamento novo_pos) {
     }
     double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
     double centro_x1, centro_y1, centro_x2, centro_y2;
-    gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
-    gerarCantos(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
+    gerarCentro(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
+    gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
     for (i=0; i<quant_dep; i++) {
         if (i!=indice) {
             gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x2, centro_y2);
@@ -321,12 +347,12 @@ void fazer_mudanca(int indice, PosicaoDepartamento novo_pos) {
             valor_func-= peso_inter*area_inter[i][indice];
         }
     }
-     double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
+    double x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d;
+    pos_dep[indice] = novo_pos;
 
     double centro_x1, centro_y1, centro_x2, centro_y2;
     gerarCentro(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], centro_x1, centro_y1);
     gerarCantos(pos_dep[indice].x, pos_dep[indice].y, pos_dep[indice].flag_forma, comp_dep[indice], larg_dep[indice], x1e, y1e, x1d, y1d);
-    pos_dep[indice] = novo_pos;//troquei
     for (i=0; i<quant_dep; i++) {
             if(i != indice){
                 gerarCentro(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], centro_x2, centro_y2);
@@ -335,7 +361,7 @@ void fazer_mudanca(int indice, PosicaoDepartamento novo_pos) {
                 valor_func+=dist_dep[i][indice];
                 gerarCantos(pos_dep[i].x, pos_dep[i].y, pos_dep[i].flag_forma, comp_dep[i], larg_dep[i], x2e, y2e, x2d, y2d);
                 area_inter[i][indice]=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d);
-                area_inter[indice][i]=area_inter[indice][i];
+                area_inter[indice][i]=area_inter[i][indice];
                 valor_func+=area_inter[i][indice]*peso_inter;
             }
 //            retorno+=get_area_inter(x1e, y1e, x1d, y1d, x2e, y2e, x2d, y2d) * peso_inter;
@@ -380,6 +406,10 @@ void buscaTabu() {
         quant=0;
         for (i=0; i<quant_dep; i++) {
             // mover para a direita
+            if (iter_atual==1) {
+                //printf("xxxxxxxxxbbbbb %d: %lf %lf %lf %lf\n", i, xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i]);
+            }
+
             for (j=1; j<=comp_fab; j++) {
                 for (k=0; k<=1; k++) {
                     novo_pos=PosicaoDepartamento(pos_dep[i].x+j, pos_dep[i].y, k);
@@ -440,12 +470,22 @@ void buscaTabu() {
                 }
             }
 
+            OLA:
+
             // mudar apenas o flag_forma
-            novo_pos=PosicaoDepartamento(pos_dep[i].x, pos_dep[i].y-j, (pos_dep[i].flag_forma+1)%2);
+            novo_pos=PosicaoDepartamento(pos_dep[i].x, pos_dep[i].y, (pos_dep[i].flag_forma+1)%2);
             gerarCantos(novo_pos.x, novo_pos.y, novo_pos.flag_forma, comp_dep[i], larg_dep[i],
                         novo_xe, novo_ye, novo_xd, novo_yd);
             if (dentro_do_retangulo(novo_xe, novo_ye, novo_xd, novo_yd,
                 xe_perm[i], ye_perm[i], xd_perm[i], yd_perm[i])) {
+//                if (novo_pos.flag_forma==1 && get_valor_mudanca(i, novo_pos)>melhor_valor) {
+//                    printf("vish\n");
+//                }
+//                else {
+//                    if (novo_pos.flag_forma==0 && get_valor_mudanca(i, novo_pos)>melhor_valor) {
+//                        printf("EITA\n");
+//                    }
+//                }
                 avaliar_mudanca(i, novo_pos, melhor_valor, dep_esc, pos_esc);
                 quant++;
             }
@@ -453,7 +493,7 @@ void buscaTabu() {
 
 
         if (melhor_valor<INF && melhor_valor<valor_func) {
-            printf("*** %lf\n", melhor_valor);
+            printf("*** %lf %d\n", melhor_valor, dep_esc);
             fazer_mudanca(dep_esc, pos_esc);
             printf("---- %d\n", quant);
             imprimirSolucao();
@@ -466,10 +506,10 @@ void buscaTabu() {
     printf("\n\nResultado final: %lf\n", valor_func);
     printf("---- %d\n", quant);
     freopen("solucao.txt", "w", stdout);
-    imprimirSolucao();
+    imprimirSolucaoCentros();
     printf("\n\n");
-
-
+    freopen("solucao_terceiro.txt", "w", stdout);
+    imprimirSolucaoTerceiro();
 }
 
 
