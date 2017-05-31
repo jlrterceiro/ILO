@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <algorithm>
 #include <stdlib.h>
@@ -145,18 +146,23 @@ int iguais_com_erro_precisao(double a, double b) {
 void gerarSolucaoInicial() {
     int i;
     double x_aux, y_aux;
+    printf("entrou\n");
     for (i=0; i<quant_dep; i++) {
+        printf("-- %d\n", i);
         x_aux = lugs_permitidos[i][0].xd-comp_dep[i];
         y_aux = lugs_permitidos[i][0].yd+larg_dep[i];
         double dif_x, dif_y;
         dif_x=x_aux-lugs_permitidos[i][0].xe;
         dif_y=lugs_permitidos[i][0].ye-y_aux;
+        printf("** %lf %lf\n", dif_x, dif_y);
         if (dif_x>-EPS && dif_x<EPS && dif_y>-EPS && dif_y<EPS) {
             pos_dep[i].x=lugs_permitidos[i][0].xe;
             pos_dep[i].y=lugs_permitidos[i][0].ye;
             pos_dep[i].flag_forma=0;
         }
         else {
+            dif_y=max(dif_y, 0.01);
+            dif_x=max(dif_x, 0.01);
             double sort_x, sort_y;
             sort_x=(rand()%((int) (dif_x*100)))/100.0;
             sort_y=(rand()%((int) (dif_y*100)))/100.0;
@@ -165,6 +171,7 @@ void gerarSolucaoInicial() {
             pos_dep[i].flag_forma=0;
         }
     }
+    printf("saiu\n");
 }
 
 
@@ -206,7 +213,7 @@ void imprimirSolucaoCentros() {
 
 void entrada_de_dados() {
     int i, j, k;
-    freopen("entrada.txt", "r", stdin);
+    freopen("entrada BT (1).txt", "r", stdin);
     scanf("%lf %lf %d", &comp_fab, &larg_fab, & quant_dep);
     for(i = 0; i < quant_dep; i++){
         scanf("%lf %lf", &comp_dep[i], &larg_dep[i]);
@@ -247,6 +254,7 @@ void saida(){
         }
          printf("\n");
     }
+    printf("*****\n");
     for (i=0; i<quant_dep; i++) {
         Retangulo ret=lugs_permitidos[i][0];
         printf("%lf %lf %lf %lf\n", ret.xe, ret.ye, ret.xd, ret.yd);
@@ -382,6 +390,7 @@ void avaliar_mudanca(int indice, PosicaoDepartamento novo_pos, double &melhor_va
 
 void buscaTabu() {
     gerarSolucaoInicial();
+    printf("ei\n");
     gerar_valor_func();
     imprimirSolucao();
     int iter_atual, i, j, k;
@@ -519,6 +528,7 @@ int main(int argc, char ** argv) {
     //printf("+++ %lf\n", area_inter(1, 10, 15, 3, 5, 30, 9, 20));
     srand(time(NULL));
     entrada_de_dados();
+    saida();
     //saida();
    // gerarSolucaoInicial();
     //imprimirSolucao();
